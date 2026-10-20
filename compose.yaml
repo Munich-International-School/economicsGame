@@ -1,15 +1,20 @@
 services:
   api:
-    build: .
+    build: api/.
     expose:
       - "8080"
 
   nginx:
     image: nginx:latest
+    build: nginx/.
+
     ports:
       - "80:80"
 
   mysql:
     image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: "root" #replace later
+
     expose:
       - "3306"
