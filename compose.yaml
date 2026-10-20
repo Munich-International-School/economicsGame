@@ -1,0 +1,15 @@
+services:
+  api:
+    build: .
+    expose:
+      - "8080"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+
+  mysql:
+    image: mysql:latest
+    expose:
+      - "3306"
