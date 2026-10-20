@@ -5,6 +5,8 @@ services:
       - "8080"
 
   nginx:
+    depends_on:
+      - api
     image: nginx:latest
     build: nginx/.
 

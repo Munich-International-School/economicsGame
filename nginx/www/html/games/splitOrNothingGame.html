@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Split or nothing</title>
+</head>
+<body>
+    <div class="fullscreen acceptSplitScreen">
+        <h2>Do you agree on this split?</h2>
+        <h2 id="acceptSplitTimer">Time left: </h2>
+        <div>
+            <h2 id="acceptSplitYouGet">You get: </h2>
+            <h2 id="acceptSplitOtherGets"></h2>
+        </div>
+        <div>
+            <button>Accept</button>
+            <button>Decline</button>
+        </div>
+    </div>
+    <div class="fullscreen pickSplitValues">
+        <div>
+            <h2 id="pickValTimer">Time left: </h2>
+            <div>
+                <h2 id="pickValYouGet">You keep: </h2>
+                <h2 id="pickValOtherGets">Other gets: </h2>
+            </div>
+            <input type="range" min="0" max="10" value="5" class="slider">
+            <button>Submit offer</button>
+        </div>
+    </div>
+    <div class="fullscreen waitingForPlayerScreen">
+        <h1>Waiting for someone to free up</h1>
+    </div>
+
+    <script src="/static/js/splitOrNothingGame.js"></script>
+</body>
+</html>
