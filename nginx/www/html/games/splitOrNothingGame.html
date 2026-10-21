@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Split or nothing</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="fullscreen acceptSplitScreen">
+    <div class="fullscreen" id="acceptSplitScreen">
         <h2>Do you agree on this split?</h2>
         <h2 id="acceptSplitTimer">Time left: </h2>
         <div>
@@ -17,7 +18,7 @@
             <button>Decline</button>
         </div>
     </div>
-    <div class="fullscreen pickSplitValues">
+    <div class="fullscreen" id="pickSplitValuesScreen">
         <div>
             <h2 id="pickValTimer">Time left: </h2>
             <div>
@@ -28,10 +29,17 @@
             <button>Submit offer</button>
         </div>
     </div>
-    <div class="fullscreen waitingForPlayerScreen">
+    <div class="fullscreen" id="waitingForPlayerScreen">
         <h1>Waiting for someone to free up</h1>
     </div>
-
+    <div class="fullscreen" id="joinGameScreen">
+        <h1>Join game</h1>
+        <label for="joinGameCodeInput">Code: </label>
+            <input type="text" id="joinGameCodeInput" maxlength="5">
+        <label for="joinGameNameInput">Name: </label>
+        <input type="text" id="joinGameNameInput" maxlength="5">
+        <button onclick="getKey()">Join</button>
+    </div>
     <script src="/static/js/splitOrNothingGame.js"></script>
 </body>
 </html>
