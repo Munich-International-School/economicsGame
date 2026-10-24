@@ -1,4 +1,4 @@
 FROM nginx:latest
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY www /etc/nginx/var/www/
+COPY static /etc/nginx/var/static/

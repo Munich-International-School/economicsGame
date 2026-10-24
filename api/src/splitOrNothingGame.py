@@ -18,6 +18,7 @@ class Game:
 
     async def matchMaking(self):
         while True:
+            #print('loop ')
             await asyncio.sleep(5)
             self.createPairs()
 
@@ -28,11 +29,6 @@ class Game:
             b = freePlayers.pop(random.randint(0, len(freePlayers) - 1))
             self.pairs.append(Pair(self, a, b))
 
-    def checkIfPlayerInGame(self, nickname: str):
-        for player in self.players:
-            if player.nickname == nickname:
-                return True
-        return False
 
 class Player:
     def __init__(self, nickname: str, key: str, game):
@@ -47,12 +43,12 @@ class Player:
     def onJoin(self, socket: WebSocket):
         self.socket = socket
         self.free = True
-        self.game.freePlayers.append(self.nickname)
+        #self.game.freePlayers.append(self.nickname)
 
     def onPairRelease(self):
         self.free = True
         self.stepsDone += 1
-        self.game.freePlayers.append(self.nickname)
+        #self.game.freePlayers.append(self.nickname)
 
     def onPairCreation(self):
         self.free = False
@@ -72,7 +68,12 @@ class Pair:
         self.player1.onPairCreation()
         self.player2.onPairCreation()
 
+        self.update = asyncio.create_task(self.updateBothPlayers())
+
+
+
     async def updateBothPlayers(self):
+        print("updateBothPlayers")
         await self.player1.socket.send_json({
             "type": "update",
             "hasRightToPick": self.player1PicksValues,
@@ -119,7 +120,7 @@ class Pair:
 allGames = {}
 
 
-@api.post("/createGame")
+@api.get("/createGame")
 async def createGame(teacherKey: str):
     global allGames
     code = random.randint(0, 99999)
@@ -129,15 +130,15 @@ async def createGame(teacherKey: str):
     allGames[code] = Game(code)
     allGames[code].start()
 
-    return allGames[code]
+    return {"code":code}
 
 @api.get("/getKey")
 async def getKey(gameCode: int, nickname: str):
     if gameCode not in allGames: raise HTTPException(status_code=404, detail="Game not found")
-    if nickname in allGames[gameCode].keysGotten: raise HTTPException(status_code=403, detail="Player already joined")
-    allGames[gameCode].keysGotten.append(nickname)
+    if nickname in allGames[gameCode].players : raise HTTPException(status_code=403, detail="Player already joined")
+
     key = hashlib.sha256(f'{str(gameCode)}:{nickname}:{serverKey}'.encode("utf-8")).hexdigest()
-    player = Player(nickname, key)
+    player = Player(nickname, key, allGames[gameCode])
     allGames[gameCode].players[nickname] = player
 
     return {"gameCode": gameCode, "nickname": nickname, "key": key}

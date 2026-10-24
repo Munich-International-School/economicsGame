@@ -3,6 +3,8 @@ services:
     build: api/.
     expose:
       - "8080"
+    environment:
+      - PYTHONUNBUFFERED=0
 
   nginx:
     depends_on:

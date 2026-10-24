@@ -34,11 +34,29 @@ async function getKey(){
     var keyJson = await keyRequest.json()
     var key = keyJson['key']
     localStorage.setItem('key', key)
-
+    localStorage.setItem('name', name)
+    localStorage.setItem('code', code)
+    joinAndPlay()
 }
 async function joinAndPlay(){
     var key = localStorage.getItem('key')
-    const socker = WebSocket()
+    var name = localStorage.getItem('name')
+    var code = localStorage.getItem('code')
+
+    const socket = new WebSocket("ws://"+location.host+"/api/splitOrNothingGame/playGame?gameCode="+code+"&nickname="+name+"&key="+key)
+
+    socket.onopen = (data) => {
+        console.log(data)
+
+    }
+
+    socket.onmessage = (data) => {
+        //console.log(data)
+        data = JSON.parse(data)
+        console.log(data)
+    }
+
+
 }
 
 applyCurrentState()
