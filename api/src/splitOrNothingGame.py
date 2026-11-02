@@ -12,6 +12,8 @@ class Game:
         self.players = {}
         self.pairs = []
         self.matchMakingTask = None
+        self.history = []
+        self.done = False
 
     def start(self):
         self.matchMakingTask = asyncio.create_task(self.matchMaking())
@@ -28,7 +30,6 @@ class Game:
             a = freePlayers.pop(random.randint(0, len(freePlayers)-1))
             b = freePlayers.pop(random.randint(0, len(freePlayers) - 1))
             self.pairs.append(Pair(self, a, b))
-
 
 class Player:
     def __init__(self, nickname: str, key: str, game):
@@ -63,10 +64,13 @@ class Pair:
         self.player2 = player2
         self.player1PicksValues = random.choice([True, False])
 
+        self.offerMaker = self.player1 if self.player1PicksValues else self.player2
+        self.offerAccepter = self.player2 if self.player1PicksValues else self.player1
+
         self.pickerGetsOffer = None
         self.offerAccepted = False
 
-        self.currentInput = asyncio.create_task(self.handleValueSelector(self.player1 if self.player1PicksValues else self.player2))
+        self.currentInput = asyncio.create_task(self.handleValueSelector(self.offerMaker))
 
         self.player1.onPairCreation()
         self.player2.onPairCreation()
@@ -89,6 +93,13 @@ class Pair:
     async def releasePair(self):
         await self.player1.onPairRelease()
         await self.player2.onPairRelease()
+        self.game.history.append(
+            {"offerMaker" : self.offerMaker.nickname,
+             "offerAccepter" : self.offerAccepter.nickname,
+             "pickerGets": self.pickerGetsOffer,
+             "offerAccepted": self.offerAccepted,}
+        )
+
         del self
 
     async def handleValueSelector(self, player):
@@ -96,8 +107,8 @@ class Pair:
             try:
                 data = await player.socket.receive_json()
                 self.pickerGetsOffer = max(0, min(data["pickerGets"], 10))
-                otherPlayer = self.player2 if self.player1PicksValues else self.player1
-                await otherPlayer.socket.send_json(
+
+                await self.offerAccepter.socket.send_json(
                     {"type": "offer",
                     "pickerGets": self.pickerGetsOffer,
                 })
@@ -106,7 +117,7 @@ class Pair:
                 pass
 
         #print("set tast")
-        self.currentInput = asyncio.create_task(self.handleOfferAccepter(self.player2 if self.player1PicksValues else self.player1))
+        self.currentInput = asyncio.create_task(self.handleOfferAccepter(self.offerAccepter))
 
 
     async def handleOfferAccepter(self, player):
@@ -115,11 +126,10 @@ class Pair:
         #print('offer info')
         if data["offerAccepted"]=="true":
             self.offerAccepted = True
-            offerMaker = self.player1 if self.player1PicksValues else self.player2
-            otherPlayer = self.player2 if self.player1PicksValues else self.player1
-            offerMaker.money += self.pickerGetsOffer
-            otherPlayer.money += 10 - self.pickerGetsOffer
 
+
+            self.offerMaker.money += self.pickerGetsOffer
+            self.offerAccepter.money += 10 - self.pickerGetsOffer
         await self.releasePair()
 
 
@@ -142,6 +152,7 @@ async def createGame(teacherKey: str):
 async def getKey(gameCode: int, nickname: str):
     if gameCode not in allGames.keys(): raise HTTPException(status_code=404, detail="Game not found")
     if nickname in allGames[gameCode].players : raise HTTPException(status_code=403, detail="Player already joined")
+    if allGames[gameCode].done: raise HTTPException(status_code=404, detail="Game already finished")
 
     key = hashlib.sha256(f'{str(gameCode)}:{nickname}:{serverKey}'.encode("utf-8")).hexdigest()
     player = Player(nickname, key, allGames[gameCode])
@@ -167,4 +178,14 @@ async def playGame(websocket: WebSocket, gameCode: int, nickname: str, key: str)
     while True:
         await asyncio.sleep(1)
 
+@api.get("/getGameLog")
+async def getGameLog(gameCode: int, teacherKey: str):
+    if gameCode not in allGames.keys(): raise HTTPException(status_code=404, detail="Game not found")
+    return allGames[gameCode].history
 
+@api.get("/getScoreOfAllPlayers")
+async def getScoreOfAllPlayers(gameCode: int):
+    if gameCode not in allGames.keys(): raise HTTPException(status_code=404, detail="Game not found")
+
+    return map(lambda player: [player.nickname, player.money],
+               sorted(allGames[gameCode].players.values(), key = lambda player: player.money, reverse=True))
