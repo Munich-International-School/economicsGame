@@ -45,9 +45,12 @@ class Player:
         self.free = True
         #self.game.freePlayers.append(self.nickname)
 
-    def onPairRelease(self):
+    async def onPairRelease(self):
         self.free = True
         self.stepsDone += 1
+        print("release pair")
+        await self.socket.send_json(
+            {"type": "roundOver"})
         #self.game.freePlayers.append(self.nickname)
 
     def onPairCreation(self):
@@ -83,9 +86,9 @@ class Pair:
             "hasRightToPick": not self.player1PicksValues,
         })
 
-    def releasePair(self):
-        self.player1.onPairRelease()
-        self.player2.onPairRelease()
+    async def releasePair(self):
+        await self.player1.onPairRelease()
+        await self.player2.onPairRelease()
         del self
 
     async def handleValueSelector(self, player):
@@ -94,7 +97,7 @@ class Pair:
                 data = await player.socket.receive_json()
                 self.pickerGetsOffer = max(0, min(data["pickerGets"], 10))
                 otherPlayer = self.player2 if self.player1PicksValues else self.player1
-                otherPlayer.socket.send_json(
+                await otherPlayer.socket.send_json(
                     {"type": "offer",
                     "pickerGets": self.pickerGetsOffer,
                 })
@@ -102,11 +105,14 @@ class Pair:
             except:
                 pass
 
-        self.currentInput = asyncio.create_task(self.handleValueSelector(player))
+        #print("set tast")
+        self.currentInput = asyncio.create_task(self.handleOfferAccepter(self.player2 if self.player1PicksValues else self.player1))
 
 
     async def handleOfferAccepter(self, player):
+        #print("waiting for accept")
         data = await player.socket.receive_json()
+        #print('offer info')
         if data["offerAccepted"]=="true":
             self.offerAccepted = True
             offerMaker = self.player1 if self.player1PicksValues else self.player2
@@ -114,7 +120,7 @@ class Pair:
             offerMaker.money += self.pickerGetsOffer
             otherPlayer.money += 10 - self.pickerGetsOffer
 
-        self.releasePair()
+        await self.releasePair()
 
 
 allGames = {}
@@ -134,7 +140,7 @@ async def createGame(teacherKey: str):
 
 @api.get("/getKey")
 async def getKey(gameCode: int, nickname: str):
-    if gameCode not in allGames: raise HTTPException(status_code=404, detail="Game not found")
+    if gameCode not in allGames.keys(): raise HTTPException(status_code=404, detail="Game not found")
     if nickname in allGames[gameCode].players : raise HTTPException(status_code=403, detail="Player already joined")
 
     key = hashlib.sha256(f'{str(gameCode)}:{nickname}:{serverKey}'.encode("utf-8")).hexdigest()

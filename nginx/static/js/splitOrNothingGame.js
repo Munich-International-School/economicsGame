@@ -126,6 +126,7 @@ function answer(accepted)
 // what the server tells a player
 function onMessage(msg)
 {
+    console.log(msg)
     if (msg.type === 'lobby')
     {
         showLobby('Waiting for the host', 'The next round starts when the host says so.')
