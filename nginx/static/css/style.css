@@ -102,6 +102,17 @@ button:focus-visible, input:focus-visible{ outline: 4px solid #fff; outline-offs
 .host button{ background: var(--gold); border-color: var(--gold); color: var(--ink) }
 .host button:disabled{ opacity: .4; cursor: not-allowed }
 #hostCode, #gameOverTotal{ display: block; font-size: clamp(4rem, 22vw, 6rem); font-weight: 800; letter-spacing: .08em; line-height: 1; color: var(--gold) }
+.leaderboard{ position: fixed; z-index: 10; top: 1rem; right: 1rem; width: min(19rem, calc(100vw - 2rem)); max-height: 42dvh; overflow: auto; padding: .85rem; border: 1px solid rgba(255, 255, 255, .25); border-radius: .75rem; background: rgba(20, 23, 61, .94); color: #fff; text-align: left; box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .2) }
+.leaderboard h2{ margin-bottom: .6rem; text-align: center; font-size: 1.2rem }
+.leaderboard ol{ margin: 0; padding: 0; list-style: none; border: 1px solid rgba(255, 255, 255, .25); border-radius: .75rem; overflow: hidden }
+.leaderboard li{ display: flex; align-items: center; gap: .75rem; padding: .65rem 1rem; background: rgba(255, 255, 255, .08); font-variant-numeric: tabular-nums }
+.leaderboard li > span:nth-child(2){ flex: 1; overflow-wrap: anywhere }
+.leaderboard li > b{ margin-left: auto }
+.leaderboard .leaderboard-rank{ min-width: 1.5rem; color: rgba(255, 255, 255, .65) }
+.leaderboard li + li{ border-top: 1px solid rgba(255, 255, 255, .15) }
+.leaderboard li:first-child{ color: var(--gold); font-weight: 800 }
+.leaderboard .leaderboard-empty{ justify-content: center; color: rgba(255, 255, 255, .75); font-weight: 400 }
+@media (max-width: 600px){ .leaderboard{ top: .5rem; right: .5rem; width: min(13rem, calc(100vw - 1rem)); max-height: 26dvh; padding: .5rem; font-size: .85rem } .leaderboard h2{ font-size: 1rem; margin-bottom: .3rem } .leaderboard li{ gap: .4rem; padding: .35rem .5rem } }
 .gamecard{ display: flex; gap: .75rem; align-items: flex-start; width: min(24rem, 100%); padding: 1rem; border: 3px solid rgba(255, 255, 255, .35); border-radius: .75rem; text-align: left; cursor: pointer }
 .gamecard:has(input:checked){ border-color: var(--gold) }
 .gamecard b{ display: block; font-size: 1.2rem }

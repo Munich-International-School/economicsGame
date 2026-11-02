@@ -12,6 +12,8 @@ var state = JOIN
 var ws = null
 var timer = null
 var hostPoll = null
+var leaderboardPoll = null
+var leaderboardRequest = false
 var gameIsOver = false
 var slider = document.getElementById("pickValSlider")
 
@@ -20,6 +22,19 @@ function setState(s)
     state = s
     applyCurrentState()
     updateMusic()
+    updateLeaderboardVisibility()
+}
+
+function updateLeaderboardVisibility()
+{
+    var playerStates = [ACCEPT, WAIT, PICK, LOBBY, OVER]
+    var visible = playerStates.includes(state) && Boolean(sessionStorage.getItem('code'))
+    document.getElementById('playerLeaderboard').hidden = !visible
+    clearInterval(leaderboardPoll)
+    if (visible) {
+        loadLeaderboard()
+        leaderboardPoll = setInterval(loadLeaderboard, 3000)
+    }
 }
 
 function applyCurrentState()
@@ -159,17 +174,59 @@ function showGameOver(money)
 {
     gameIsOver = true
     stopTimer()
-    var playerKeys = ['key', 'code', 'name']
+    var playerKeys = ['key', 'name']
     playerKeys.forEach(k => sessionStorage.removeItem(k))
     document.getElementById("gameOverTotal").textContent = money
     setState(OVER)
     if (ws) ws.close()
 }
 
+async function loadLeaderboard()
+{
+    var code = sessionStorage.getItem('code')
+    var list = document.getElementById('leaderboardList')
+    if (!code || leaderboardRequest) return
+    leaderboardRequest = true
+    try {
+        var res = await fetch(API + '/getScoreOfAllPlayers?gameCode=' + encodeURIComponent(code))
+        if (!res.ok) throw new Error('Could not load scores')
+        var scores = await res.json()
+        list.replaceChildren()
+        if (!scores.length) {
+            var empty = document.createElement('li')
+            empty.className = 'leaderboard-empty'
+            empty.textContent = 'No scores yet.'
+            list.appendChild(empty)
+            return
+        }
+        scores.forEach((entry, index) => {
+            var row = document.createElement('li')
+            var rank = document.createElement('span')
+            var name = document.createElement('span')
+            var score = document.createElement('b')
+            rank.className = 'leaderboard-rank'
+            rank.textContent = (index + 1) + '.'
+            name.textContent = entry[0]
+            score.textContent = entry[1] + (entry[1] === 1 ? ' coin' : ' coins')
+            row.append(rank, name, score)
+            list.appendChild(row)
+        })
+    } catch {
+        list.replaceChildren()
+        var error = document.createElement('li')
+        error.className = 'leaderboard-empty'
+        error.textContent = 'Scores are unavailable right now.'
+        list.appendChild(error)
+    } finally {
+        leaderboardRequest = false
+    }
+}
+
 function leaveGame()
 {
     gameIsOver = false
     showError('')
+    sessionStorage.removeItem('code')
     setState(JOIN)
 }
 

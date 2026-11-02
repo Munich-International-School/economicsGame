@@ -107,6 +107,13 @@
         <button onclick="leaveGame()">Join another game</button>
     </section>
 
+    <aside class="leaderboard" id="playerLeaderboard" aria-labelledby="leaderboardTitle" hidden>
+        <h2 id="leaderboardTitle">Leaderboard</h2>
+        <ol id="leaderboardList" aria-live="polite">
+            <li class="leaderboard-empty">Loading scores…</li>
+        </ol>
+    </aside>
+
     
     <script src="/static/js/splitOrNothingGame.js"></script>
 </body>

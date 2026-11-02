@@ -187,5 +187,6 @@ async def getGameLog(gameCode: int, teacherKey: str):
 async def getScoreOfAllPlayers(gameCode: int):
     if gameCode not in allGames.keys(): raise HTTPException(status_code=404, detail="Game not found")
 
-    return map(lambda player: [player.nickname, player.money],
-               sorted(allGames[gameCode].players.values(), key = lambda player: player.money, reverse=True))
+    return [[player.nickname, player.money]
+            for player in sorted(allGames[gameCode].players.values(),
+                                 key=lambda player: player.money, reverse=True)]
